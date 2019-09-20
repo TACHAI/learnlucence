@@ -104,7 +104,7 @@ public abstract class BaseIndex<T> implements Runnable{
     public void run() {
         try {
             countDownLatch1.await();
-            System.out.println(writer);
+            System.out.println(writer+"===="+Thread.currentThread().getName());
             indexDocs(writer,list);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -112,12 +112,12 @@ public abstract class BaseIndex<T> implements Runnable{
             e.printStackTrace();
         }finally{
             countDownLatch2.countDown();
-            try {
-                writer.commit();
-                writer.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+//            try {
+//                writer.commit();
+//                writer.close();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
 
         }
 

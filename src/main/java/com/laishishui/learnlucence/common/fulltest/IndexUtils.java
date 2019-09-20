@@ -6,10 +6,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexWriter;
-import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.*;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -47,6 +44,8 @@ public class IndexUtils {
     static IndexReader reader = null;
     IndexWriter ramWriter = null;
 
+    static IndexWriterConfig indexWriterConfig;
+
     public static Analyzer analyzer;
     static Directory fsd;
 
@@ -66,6 +65,7 @@ public class IndexUtils {
 //            path = Paths.get("mysql/keyword");// 磁盘索引库路径(相对路径)
 //            fsd = FSDirectory.open(path);// 创建磁盘目录
 
+            indexWriterConfig =new IndexWriterConfig(analyzer);
 
             // 使用内存磁盘
             fsd = new RAMDirectory();
@@ -134,8 +134,21 @@ public class IndexUtils {
      */
     public static IndexSearcher getIndexSearcher(ExecutorService service) throws IOException {
         if (null == searcher) {
-            reader = DirectoryReader.open(fsd);
-            searcher = new IndexSearcher(reader,service);
+            MultiReader reader = null;
+            // 写在磁盘上的
+            String parentPath = "";
+            //设置
+            try {
+                File[] files = new File(parentPath).listFiles();
+                IndexReader[] readers = new IndexReader[files.length];
+                for (int i = 0 ; i < files.length ; i ++) {
+                    readers[i] = DirectoryReader.open(FSDirectory.open(Paths.get(files[i].getPath(), new String[0])));
+                }
+                reader = new MultiReader(readers);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return new IndexSearcher(reader,service);
         }
         return searcher;
     }
@@ -144,7 +157,7 @@ public class IndexUtils {
     /**
      * 获取搜索器
      */
-    public static IndexSearcher getIndexSearcher() throws IOException {
+    public static  IndexSearcher getIndexSearcher() throws IOException {
         if (null == searcher) {
             reader = DirectoryReader.open(fsd);
             searcher = new IndexSearcher(reader);
@@ -153,20 +166,25 @@ public class IndexUtils {
     }
 
 
+
+
     /**
      * 获取磁盘写入
      */
 
-    public  IndexWriter getWriter() throws IOException {
-        if (null == writer) {
+    public static IndexWriter getWriter() throws IOException {
+
+
+            if (null == writer) {
             // 为什么使用这种new 匿名方式创建该对象 IndexWriterConfig(Version.LUCENE)
             // analyzer)
             // 因为IndexWriterConfig对象只能使用一次、一次
-            synchronized (this){
-                writer = new IndexWriter(fsd, new IndexWriterConfig(analyzer));
+
+
+                writer = new IndexWriter(fsd, indexWriterConfig);
+
             }
 
-        }
         return writer;
     }
 

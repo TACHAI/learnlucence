@@ -2,6 +2,7 @@ package com.laishishui.learnlucence.service.impl;
 
 import com.laishishui.learnlucence.common.fulltest.BaiKeBeanIndex;
 import com.laishishui.learnlucence.common.fulltest.IKAnalyzer;
+import com.laishishui.learnlucence.common.fulltest.IndexUtils;
 import com.laishishui.learnlucence.common.fulltest.SearchMethod;
 import com.laishishui.learnlucence.dao.BaikeMapper;
 import com.laishishui.learnlucence.po.Baike;
@@ -67,6 +68,7 @@ public class SearchServiceImpl implements SearchService {
             //等待所有线程都完成
             countDownLatch2.await();
             //线程全部完成工作
+            IndexUtils.getWriter().commit();
             System.out.println("所有线程都创建索引完毕");
             //释放线程池资源
             pool.shutdown();
@@ -91,7 +93,8 @@ public class SearchServiceImpl implements SearchService {
 //        Analyzer analyzer = new IKAnalyzer();
         Analyzer analyzer = new StandardAnalyzer();
         try {
-            IndexSearcher searcher = SearchMethod.getIndexSearcher(service);
+            IndexSearcher searcher = SearchMethod.getIndexSearcher();
+//            IndexSearcher searcher = SearchMethod.getIndexSearcher(service);
             String[] fields = {"title","summary"};
             //构造Query对象
             MultiFieldQueryParser parser = new MultiFieldQueryParser(fields,analyzer);

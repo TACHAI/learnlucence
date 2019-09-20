@@ -31,7 +31,10 @@ public class BaiKeBeanIndex extends BaseIndex<Baike>{
         Document doc = new Document();
         Field id = new Field("id", t.getId()+"", TextField.TYPE_STORED);
         Field title = new Field("title", t.getTitle(), TextField.TYPE_STORED);
-        Field summary = new Field("summary", t.getSummary(), TextField.TYPE_STORED);
+        Field summary = null;
+        if(null!=t.getSummary()){
+            summary = new Field("summary", t.getSummary(), TextField.TYPE_STORED);
+        }
         //添加到Document中
         doc.add(id);
         doc.add(title);
